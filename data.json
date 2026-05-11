@@ -1,16 +1,17 @@
 {
   "configuracion": {
     "empresa": "Voy Jinotepe",
-    "ubicacion": "Carazo, Nicaragua",
-    "moneda": "C$"
+    "moneda": "C$",
+    "ultimo_arqueo": "C$ -10 (meta C$ 0)",
+    "crecimiento_semanal": "+12%"
   },
   "kpis": {
     "ventas_totales": 15200,
-    "diferencia_arqueo": -10,
-    "crecimiento_porcentaje": 12,
-    "pedidos_finalizados": 215
+    "pedidos_finalizados": 215,
+    "tasa_entregas_exitosas": 98.2,
+    "promedio_valor_pedido": 70.70
   },
-  "grafico_tendencia": [
+  "tendencia_pedidos": [
     {"hora": "8 AM", "pedidos": 200},
     {"hora": "10 AM", "pedidos": 500},
     {"hora": "12 PM", "pedidos": 900},
@@ -18,26 +19,28 @@
     {"hora": "6 PM", "pedidos": 1800},
     {"hora": "9 PM", "pedidos": 1500}
   ],
-  "categorias": [
-    {"nombre": "Súper", "ingresos": 8500},
-    {"nombre": "Farma", "ingresos": 6700}
+  "rentabilidad_categoria": [
+    {"categoria": "Compras de Súper", "margen": 15, "margen_C$": 3500},
+    {"categoria": "Farmacia y Salud", "margen": 25, "margen_C$": 2800},
+    {"categoria": "Gestión de Pagos", "margen": 10, "margen_C$": 1200},
+    {"categoria": "Mensajería", "margen": 20, "margen_C$": 1000}
   ],
   "desempeño_repartidores": [
-    {"nombre": "Repartidor 1", "entregas": 45},
-    {"nombre": "Repartidor 2", "entregas": 38},
-    {"nombre": "Repartidor 3", "entregas": 20}
+    {"repartidor": "Juan P.", "entregas": 65, "puntuacion": 4.9},
+    {"repartidor": "Maria L.", "entregas": 58, "puntuacion": 4.7},
+    {"repartidor": "Carlos R.", "entregas": 42, "puntuacion": 4.5},
+    {"repartidor": "Pedro G.", "entregas": 30, "puntuacion": 4.8},
+    {"repartidor": "Sofia M.", "entregas": 20, "puntuacion": 4.6}
+  ],
+  "alertas_recientes": [
+    {"nivel": "Critico", "indicador": "Arqueo de Caja", "interpretacion": "Diferencia negativa detectada", "recomendacion": "Revisar facturas turno matutino"},
+    {"nivel": "Informativo", "indicador": "Pico de Demanda", "interpretacion": "Alto volumen de pedidos esperado en 30 min", "recomendacion": "Asegurar repartidores listos"}
   ],
   "detalle_pedidos": [
-    {"id": 101, "repartidor": "Repartidor 1", "monto": 200, "estado": "Entregado"},
-    {"id": 102, "repartidor": "Repartidor 1", "monto": 200, "estado": "En Proceso"},
-    {"id": 156, "repartidor": "Repartidor 3", "monto": 270, "estado": "Finalizado"}
-  ],
-  "alertas": [
-    {
-      "nivel": "Crítico",
-      "indicador": "Arqueo de Caja",
-      "interpretación": "Diferencia negativa detectada",
-      "recomendacion": "Revisar facturas del turno matutino"
-    }
+    {"id": "#1052", "repartidor": "Juan P.", "producto": "Compras de Súper", "monto": 450, "estado": "Entregado"},
+    {"id": "#1053", "repartidor": "Maria L.", "producto": "Farmacia y Salud", "monto": 1200, "estado": "En Ruta"},
+    {"id": "#1054", "repartidor": "Carlos R.", "producto": "Compras de Súper", "monto": 2150, "estado": "Entregado"},
+    {"id": "#1055", "repartidor": "Juan P.", "producto": "Gestión de Pagos", "monto": 150, "estado": "Cancelado"},
+    {"id": "#1056", "repartidor": "Sofia M.", "producto": "Mensajería", "monto": 200, "estado": "Preparación"}
   ]
 }

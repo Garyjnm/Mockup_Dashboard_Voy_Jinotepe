@@ -3,51 +3,85 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Control Operativo - Voy Jinotepe</title>
+    <title>Voy Jinotepe - Control Operativo</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Urbanist:wght@400;500;700&family=Inter:wght@400;500&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
-    <!-- Librería para los gráficos -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
-    <div class="dashboard-container">
+    <div class="dashboard-wrapper">
         <header>
-            <h1 id="titulo-empresa">Cargando...</h1>
-            <div class="filtros">
-                <select><option>Período (Día/Mes)</option></select>
-                <select><option>Repartidor</option></select>
-                <select><option>Categoría</option></select>
+            <div class="logo-area">
+                <img src="./Imagenes/logo.png" alt="Logo Voy Jinotepe">
+                <h1>Voy Jinotepe</h1>
+            </div>
+            <div class="top-bar-info">
+                <span id="top-bar-time">8:00 AM - 9:00 PM</span>
+                <span id="top-bar-location">Carazo</span>
+                <button class="selector-escenario-btn">Selector de escenario v</button>
             </div>
         </header>
 
-        <!-- Tarjetas KPI -->
+        <section class="filtros-seccion">
+            <select><option>Período (Día/Mes)</option></select>
+            <select><option>Repartidor</option></select>
+            <select><option>Categoría (Súper/Farma)</option></select>
+            <select><option>Zona de Carazo</option></select>
+        </section>
+
         <section class="kpi-grid">
             <div class="kpi-card">
                 <h3>Ventas Totales</h3>
                 <p id="kpi-ventas" class="kpi-value">C$ 0</p>
-            </div>
-            <div class="kpi-card">
-                <h3>Diferencia Arqueo</h3>
-                <p id="kpi-arqueo" class="kpi-value">C$ 0</p>
-            </div>
-            <div class="kpi-card">
-                <h3>Crecimiento</h3>
-                <p id="kpi-crecimiento" class="kpi-value">0%</p>
+                <p id="kpi-variacion" class="kpi-variation positive">+12%</p>
             </div>
             <div class="kpi-card">
                 <h3>Pedidos Finalizados</h3>
                 <p id="kpi-pedidos" class="kpi-value">0</p>
+                <p class="kpi-meta">Crecimiento semanal</p>
+            </div>
+            <div class="kpi-card">
+                <h3>Eficiencia de Entrega</h3>
+                <p id="kpi-tasa" class="kpi-value">0%</p>
+                <p class="kpi-meta positive">En el objetivo</p>
+            </div>
+            <div class="kpi-card">
+                <h3>Ticket Promedio</h3>
+                <p id="kpi-ticket" class="kpi-value">C$ 0</p>
+                <p class="kpi-meta">Meta: C$ 75.00</p>
             </div>
         </section>
 
-        <!-- Gráfico Principal -->
-        <section class="chart-section">
-            <h3>Tendencia temporal de pedidos por hora</h3>
-            <canvas id="graficoTendencia"></canvas>
+        <section class="trend-section">
+            <h3>Tendencia Temporal de Pedido (por hora)</h3>
+            <div class="chart-container main-trend">
+                <canvas id="tendenciaPedidosLineal"></canvas>
+            </div>
         </section>
 
-        <!-- Tabla Resumen -->
+        <section class="bottom-charts-grid">
+            <div class="chart-card donut">
+                <h3>Rentabilidad por Categoría</h3>
+                <div class="chart-container">
+                    <canvas id="rentabilidadCategoriasDonut"></canvas>
+                </div>
+            </div>
+            <div class="chart-card bar">
+                <h3>Desempeño por Repartidor</h3>
+                <div class="chart-container">
+                    <canvas id="desempeñoRepartidoresBarras"></canvas>
+                </div>
+            </div>
+        </section>
+
+        <section class="alert-section">
+            <h3>Alertas Recientes</h3>
+            <div id="alert-list"></div>
+        </section>
+
         <section class="table-section">
-            <h3>Detalle por pedido</h3>
+            <h3>Detalle por Pedido</h3>
             <table>
                 <thead>
                     <tr>
@@ -58,8 +92,7 @@
                     </tr>
                 </thead>
                 <tbody id="tabla-pedidos">
-                    <!-- JavaScript inyectará las filas aquí -->
-                </tbody>
+                    </tbody>
             </table>
         </section>
     </div>
