@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Control Operativo - Voy Jinotepe</title>
+    <link rel="stylesheet" href="style.css">
+    <!-- Librería para los gráficos -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <div class="dashboard-container">
+        <header>
+            <h1 id="titulo-empresa">Cargando...</h1>
+            <div class="filtros">
+                <select><option>Período (Día/Mes)</option></select>
+                <select><option>Repartidor</option></select>
+                <select><option>Categoría</option></select>
+            </div>
+        </header>
+
+        <!-- Tarjetas KPI -->
+        <section class="kpi-grid">
+            <div class="kpi-card">
+                <h3>Ventas Totales</h3>
+                <p id="kpi-ventas" class="kpi-value">C$ 0</p>
+            </div>
+            <div class="kpi-card">
+                <h3>Diferencia Arqueo</h3>
+                <p id="kpi-arqueo" class="kpi-value">C$ 0</p>
+            </div>
+            <div class="kpi-card">
+                <h3>Crecimiento</h3>
+                <p id="kpi-crecimiento" class="kpi-value">0%</p>
+            </div>
+            <div class="kpi-card">
+                <h3>Pedidos Finalizados</h3>
+                <p id="kpi-pedidos" class="kpi-value">0</p>
+            </div>
+        </section>
+
+        <!-- Gráfico Principal -->
+        <section class="chart-section">
+            <h3>Tendencia temporal de pedidos por hora</h3>
+            <canvas id="graficoTendencia"></canvas>
+        </section>
+
+        <!-- Tabla Resumen -->
+        <section class="table-section">
+            <h3>Detalle por pedido</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Repartidor</th>
+                        <th>Monto Envío</th>
+                        <th>Estado de Entrega</th>
+                    </tr>
+                </thead>
+                <tbody id="tabla-pedidos">
+                    <!-- JavaScript inyectará las filas aquí -->
+                </tbody>
+            </table>
+        </section>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>

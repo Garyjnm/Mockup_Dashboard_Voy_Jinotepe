@@ -1,0 +1,43 @@
+{
+  "configuracion": {
+    "empresa": "Voy Jinotepe",
+    "ubicacion": "Carazo, Nicaragua",
+    "moneda": "C$"
+  },
+  "kpis": {
+    "ventas_totales": 15200,
+    "diferencia_arqueo": -10,
+    "crecimiento_porcentaje": 12,
+    "pedidos_finalizados": 215
+  },
+  "grafico_tendencia": [
+    {"hora": "8 AM", "pedidos": 200},
+    {"hora": "10 AM", "pedidos": 500},
+    {"hora": "12 PM", "pedidos": 900},
+    {"hora": "3 PM", "pedidos": 1200},
+    {"hora": "6 PM", "pedidos": 1800},
+    {"hora": "9 PM", "pedidos": 1500}
+  ],
+  "categorias": [
+    {"nombre": "Súper", "ingresos": 8500},
+    {"nombre": "Farma", "ingresos": 6700}
+  ],
+  "desempeño_repartidores": [
+    {"nombre": "Repartidor 1", "entregas": 45},
+    {"nombre": "Repartidor 2", "entregas": 38},
+    {"nombre": "Repartidor 3", "entregas": 20}
+  ],
+  "detalle_pedidos": [
+    {"id": 101, "repartidor": "Repartidor 1", "monto": 200, "estado": "Entregado"},
+    {"id": 102, "repartidor": "Repartidor 1", "monto": 200, "estado": "En Proceso"},
+    {"id": 156, "repartidor": "Repartidor 3", "monto": 270, "estado": "Finalizado"}
+  ],
+  "alertas": [
+    {
+      "nivel": "Crítico",
+      "indicador": "Arqueo de Caja",
+      "interpretación": "Diferencia negativa detectada",
+      "recomendacion": "Revisar facturas del turno matutino"
+    }
+  ]
+}
