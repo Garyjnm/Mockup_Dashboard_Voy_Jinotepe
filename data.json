@@ -32,6 +32,16 @@
     {"repartidor": "Pedro G.", "entregas": 30, "puntuacion": 4.8},
     {"repartidor": "Sofia M.", "entregas": 20, "puntuacion": 4.6}
   ],
+  "ventas_por_zona": [
+    {"zona": "Jinotepe", "ventas": 4800},
+    {"zona": "Diriamba", "ventas": 3200},
+    {"zona": "San Marcos", "ventas": 2500},
+    {"zona": "Dolores", "ventas": 1500},
+    {"zona": "El Rosario", "ventas": 900},
+    {"zona": "La Conquista", "ventas": 600},
+    {"zona": "Santa Teresa", "ventas": 1800},
+    {"zona": "La Paz", "ventas": 1100}
+  ],
   "alertas_recientes": [
     {"nivel": "Critico", "indicador": "Arqueo de Caja", "interpretacion": "Diferencia negativa detectada", "recomendacion": "Revisar facturas turno matutino"},
     {"nivel": "Informativo", "indicador": "Pico de Demanda", "interpretacion": "Alto volumen de pedidos esperado en 30 min", "recomendacion": "Asegurar repartidores listos"}

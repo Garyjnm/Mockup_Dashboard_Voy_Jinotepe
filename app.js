@@ -20,6 +20,7 @@ fetch('data.json')
         crearGráficoTendencia(datos.tendencia_pedidos);
         crearGráficoRentabilidad(datos.rentabilidad_categoria);
         crearGráficoDesempeño(datos.desempeño_repartidores);
+        crearGraficoVentasZona(datos.ventas_por_zona);
     })
     .catch(error => console.error("Error cargando el JSON:", error));
 
@@ -91,6 +92,20 @@ function crearGráficoRentabilidad(datos) {
                         boxWidth: 20,
                         padding: 20
                     }
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            let label = context.label || '';
+                            if (label) {
+                                label += ': ';
+                            }
+                            if (context.parsed !== null) {
+                                label += 'C$ ' + context.parsed.toLocaleString();
+                            }
+                            return label;
+                        }
+                    }
                 }
             }
         }
@@ -125,6 +140,65 @@ function crearGráficoDesempeño(datos) {
             },
             plugins: {
                 legend: { display: false }
+            }
+        }
+    });
+}
+
+function crearGraficoVentasZona(datos) {
+    const ctx = document.getElementById('ventasPorZonaBarras').getContext('2d');
+    
+    // Ordenar los datos de mayor a menor venta
+    const datosOrdenados = datos.sort((a, b) => b.ventas - a.ventas);
+
+    new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: datosOrdenados.map(i => i.zona),
+            datasets: [{
+                label: 'Ventas Totales',
+                data: datosOrdenados.map(i => i.ventas),
+                backgroundColor: '#4ade80', // Un verde más suave para las barras
+                borderColor: MARCA_VERDE,
+                borderWidth: 2
+            }]
+        },
+        options: {
+            indexAxis: 'y', // Esto hace que el gráfico sea horizontal
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                x: {
+                    grid: { color: 'rgba(156, 163, 175, 0.2)' },
+                    ticks: { 
+                        color: TEXTO_SECUNDARIO,
+                        // Formatear como moneda
+                        callback: function(value, index, values) {
+                            return 'C$ ' + value.toLocaleString();
+                        }
+                    }
+                },
+                y: {
+                    grid: { display: false },
+                    ticks: { color: TEXTO_SECUNDARIO }
+                }
+            },
+            plugins: {
+                legend: { display: false },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            let label = context.dataset.label || '';
+                            if (label) {
+                                label += ': ';
+                            }
+                            if (context.parsed.x !== null) {
+                                label += 'C$ ' + context.parsed.x.toLocaleString();
+                            }
+                            return label;
+                        }
+                    }
+                }
             }
         }
     });
