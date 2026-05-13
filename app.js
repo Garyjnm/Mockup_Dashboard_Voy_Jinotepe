@@ -15,44 +15,6 @@ fetch('data.json')
         document.getElementById('kpi-tasa').textContent = `${datos.kpis.tasa_entregas_exitosas}%`;
         document.getElementById('kpi-ticket').textContent = `${datos.configuracion.moneda} ${datos.kpis.promedio_valor_pedido}`;
 
-        // Llenar Alertas
-        const alertList = document.getElementById('alert-list');
-        datos.alertas_recientes.forEach(alerta => {
-            const item = document.createElement('div');
-            item.className = 'alert-item';
-            item.innerHTML = `
-                <h4 class="${alerta.nivel === 'Critico' ? 'nivel-critico' : ''}">${alerta.nivel}: ${alerta.indicador}</h4>
-                <p>Interpretación: ${alerta.interpretacion}</p>
-                <p>Recomendación: ${alerta.recomendacion}</p>
-            `;
-            alertList.appendChild(item);
-        });
-
-        // Llenar Tabla
-        const tbody = document.getElementById('tabla-pedidos');
-        datos.detalle_pedidos.forEach(pedido => {
-            const fila = document.createElement('tr');
-            let colorEstado = TEXTO_SECUNDARIO;
-            switch (pedido.estado) {
-                case 'Entregado':
-                    colorEstado = MARCA_VERDE;
-                    break;
-                case 'Cancelado':
-                    colorEstado = ROJO_ALERTA;
-                    break;
-                case 'En Ruta':
-                    colorEstado = AMARILLO_ALERTA;
-                    break;
-            }
-            fila.innerHTML = `
-                <td>${pedido.id}</td>
-                <td>${pedido.repartidor}</td>
-                <td>${datos.configuracion.moneda} ${pedido.monto}</td>
-                <td style="color: ${colorEstado}; font-weight: 500;">${pedido.estado}</td>
-            `;
-            tbody.appendChild(fila);
-        });
-
         // Inicializar Gráficos
         configurarChartJsDefaults();
         crearGráficoTendencia(datos.tendencia_pedidos);
