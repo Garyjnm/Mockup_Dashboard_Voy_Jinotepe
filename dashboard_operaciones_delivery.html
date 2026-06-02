@@ -1,0 +1,434 @@
+
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--font-sans)}
+.dash{background:#0d1117;color:#e6edf3;min-height:100vh;padding:0;border-radius:12px;overflow:hidden}
+.topbar{background:#161b22;border-bottom:1px solid #21262d;padding:12px 20px;display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.filter-select{background:#21262d;border:1px solid #30363d;color:#e6edf3;padding:6px 10px;border-radius:6px;font-size:12px;cursor:pointer}
+.kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;padding:16px 20px}
+.kpi{background:#161b22;border:1px solid #21262d;border-radius:10px;padding:14px 16px}
+.kpi-label{font-size:11px;color:#8b949e;margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px}
+.kpi-val{font-size:26px;font-weight:600;color:#3fb950;line-height:1}
+.kpi-sub{font-size:11px;color:#8b949e;margin-top:4px}
+.kpi-sub.warn{color:#f0883e}
+.section{padding:0 20px 20px}
+.section-title{font-size:13px;font-weight:500;color:#e6edf3;margin-bottom:12px;padding-left:8px;border-left:3px solid #3fb950}
+.chart-card{background:#161b22;border:1px solid #21262d;border-radius:10px;padding:16px}
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.legend{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:10px;font-size:11px;color:#8b949e}
+.legend span{display:flex;align-items:center;gap:5px}
+.leg-dot{width:10px;height:10px;border-radius:2px;flex-shrink:0}
+</style>
+
+<div class="dash">
+  <div class="topbar">
+    <select class="filter-select" id="fMes" onchange="applyFilters()">
+      <option value="all">Todos los meses</option>
+      <option value="1">Enero</option><option value="2">Febrero</option>
+      <option value="3">Marzo</option><option value="4">Abril</option>
+      <option value="5">Mayo</option><option value="6">Junio</option>
+    </select>
+    <select class="filter-select" id="fRep" onchange="applyFilters()">
+      <option value="all">Todos los repartidores</option>
+      <option value="Juan P.">Juan P.</option><option value="Maria L.">Maria L.</option>
+      <option value="Carlos R.">Carlos R.</option><option value="Pedro G.">Pedro G.</option>
+      <option value="Sofia M.">Sofia M.</option>
+    </select>
+    <select class="filter-select" id="fCat" onchange="applyFilters()">
+      <option value="all">Todas las categorías</option>
+      <option value="Compras de Súper">Compras de Súper</option>
+      <option value="Farmacia y Salud">Farmacia y Salud</option>
+      <option value="Gestión de Pagos">Gestión de Pagos</option>
+      <option value="Mensajería">Mensajería</option>
+    </select>
+    <select class="filter-select" id="fZona" onchange="applyFilters()">
+      <option value="all">Todas las zonas</option>
+      <option value="Jinotepe">Jinotepe</option><option value="Diriamba">Diriamba</option>
+      <option value="San Marcos">San Marcos</option><option value="Santa Teresa">Santa Teresa</option>
+      <option value="Dolores">Dolores</option><option value="La Paz">La Paz</option>
+    </select>
+  </div>
+
+  <div class="kpis">
+    <div class="kpi"><div class="kpi-label">Ventas Totales</div><div class="kpi-val" id="kVentas">C$ 0</div><div class="kpi-sub" id="kVentasSub">cargando...</div></div>
+    <div class="kpi"><div class="kpi-label">Pedidos Finalizados</div><div class="kpi-val" id="kPedidos">0</div><div class="kpi-sub" id="kPedidosSub">cargando...</div></div>
+    <div class="kpi"><div class="kpi-label">Eficiencia de Entrega</div><div class="kpi-val" id="kEfic">0%</div><div class="kpi-sub warn" id="kEficSub">calculando...</div></div>
+    <div class="kpi"><div class="kpi-label">Ticket Promedio</div><div class="kpi-val" id="kTicket">C$ 0</div><div class="kpi-sub" id="kTicketSub">cargando...</div></div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">Tendencia Temporal de Pedidos</div>
+    <div class="chart-card">
+      <div style="position:relative;height:200px"><canvas id="chartLinea" role="img" aria-label="Línea de pedidos por hora del día">Tendencia de pedidos por hora</canvas></div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="two-col">
+      <div>
+        <div class="section-title">Rentabilidad por Categoría</div>
+        <div class="chart-card">
+          <div class="legend" id="legCat"></div>
+          <div style="position:relative;height:200px"><canvas id="chartDonut" role="img" aria-label="Donut de monto por categoría">Distribución por categoría</canvas></div>
+        </div>
+      </div>
+      <div>
+        <div class="section-title">Desempeño por Repartidor</div>
+        <div class="chart-card">
+          <div style="position:relative;height:230px"><canvas id="chartRep" role="img" aria-label="Barras de pedidos por repartidor">Pedidos por repartidor</canvas></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">Ventas por Zona</div>
+    <div class="chart-card">
+      <div style="position:relative;height:260px"><canvas id="chartZona" role="img" aria-label="Barras horizontales de ventas por zona">Ventas por zona</canvas></div>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<script>
+const RAW = [
+{f:'2026-01-05',h:8,rep:'Maria L.',cat:'Compras de Súper',est:1,m:150,z:'Jinotepe'},
+{f:'2026-01-05',h:10,rep:'Pedro G.',cat:'Gestión de Pagos',est:1,m:100,z:'Diriamba'},
+{f:'2026-01-05',h:12,rep:'Juan P.',cat:'Farmacia y Salud',est:1,m:200,z:'Jinotepe'},
+{f:'2026-01-05',h:12,rep:'Carlos R.',cat:'Compras de Súper',est:1,m:250,z:'San Marcos'},
+{f:'2026-01-05',h:12,rep:'Sofia M.',cat:'Mensajería',est:1,m:100,z:'Santa Teresa'},
+{f:'2026-01-05',h:18,rep:'Maria L.',cat:'Compras de Súper',est:1,m:300,z:'Jinotepe'},
+{f:'2026-01-05',h:18,rep:'Juan P.',cat:'Farmacia y Salud',est:1,m:150,z:'Dolores'},
+{f:'2026-01-05',h:18,rep:'Carlos R.',cat:'Gestión de Pagos',est:1,m:100,z:'La Paz'},
+{f:'2026-01-05',h:19,rep:'Pedro G.',cat:'Compras de Súper',est:1,m:200,z:'Jinotepe'},
+{f:'2026-01-05',h:21,rep:'Sofia M.',cat:'Mensajería',est:1,m:50,z:'Diriamba'},
+{f:'2026-01-07',h:8,rep:'Maria L.',cat:'Farmacia y Salud',est:1,m:100,z:'San Marcos'},
+{f:'2026-01-07',h:10,rep:'Juan P.',cat:'Compras de Súper',est:1,m:250,z:'Jinotepe'},
+{f:'2026-01-07',h:12,rep:'Carlos R.',cat:'Gestión de Pagos',est:1,m:150,z:'Diriamba'},
+{f:'2026-01-07',h:12,rep:'Pedro G.',cat:'Compras de Súper',est:1,m:350,z:'Jinotepe'},
+{f:'2026-01-07',h:15,rep:'Sofia M.',cat:'Farmacia y Salud',est:1,m:100,z:'Santa Teresa'},
+{f:'2026-01-07',h:18,rep:'Juan P.',cat:'Mensajería',est:2,m:50,z:'El Rosario'},
+{f:'2026-01-07',h:18,rep:'Maria L.',cat:'Compras de Súper',est:1,m:200,z:'Jinotepe'},
+{f:'2026-01-07',h:19,rep:'Carlos R.',cat:'Farmacia y Salud',est:1,m:150,z:'San Marcos'},
+{f:'2026-01-07',h:21,rep:'Pedro G.',cat:'Compras de Súper',est:1,m:300,z:'Jinotepe'},
+{f:'2026-01-12',h:8,rep:'Sofia M.',cat:'Gestión de Pagos',est:1,m:100,z:'Diriamba'},
+{f:'2026-01-12',h:10,rep:'Juan P.',cat:'Compras de Súper',est:1,m:200,z:'Jinotepe'},
+{f:'2026-01-12',h:10,rep:'Maria L.',cat:'Mensajería',est:1,m:50,z:'La Paz'},
+{f:'2026-01-12',h:12,rep:'Carlos R.',cat:'Farmacia y Salud',est:1,m:150,z:'Santa Teresa'},
+{f:'2026-01-12',h:12,rep:'Pedro G.',cat:'Compras de Súper',est:1,m:250,z:'Jinotepe'},
+{f:'2026-01-12',h:12,rep:'Sofia M.',cat:'Gestión de Pagos',est:1,m:100,z:'Diriamba'},
+{f:'2026-01-12',h:15,rep:'Juan P.',cat:'Farmacia y Salud',est:1,m:100,z:'San Marcos'},
+{f:'2026-01-12',h:18,rep:'Maria L.',cat:'Compras de Súper',est:1,m:400,z:'Jinotepe'},
+{f:'2026-01-12',h:18,rep:'Carlos R.',cat:'Mensajería',est:1,m:150,z:'La Conquista'},
+{f:'2026-01-12',h:18,rep:'Pedro G.',cat:'Compras de Súper',est:1,m:200,z:'Jinotepe'},
+{f:'2026-01-12',h:21,rep:'Sofia M.',cat:'Farmacia y Salud',est:1,m:100,z:'Diriamba'},
+{f:'2026-01-19',h:8,rep:'Carlos R.',cat:'Compras de Súper',est:1,m:300,z:'Jinotepe'},
+{f:'2026-01-19',h:10,rep:'Juan P.',cat:'Gestión de Pagos',est:1,m:100,z:'Santa Teresa'},
+{f:'2026-01-19',h:12,rep:'Maria L.',cat:'Mensajería',est:1,m:50,z:'San Marcos'},
+{f:'2026-01-19',h:12,rep:'Pedro G.',cat:'Compras de Súper',est:1,m:250,z:'Jinotepe'},
+{f:'2026-01-19',h:12,rep:'Sofia M.',cat:'Farmacia y Salud',est:2,m:100,z:'Diriamba'},
+{f:'2026-01-19',h:18,rep:'Juan P.',cat:'Compras de Súper',est:1,m:200,z:'Jinotepe'},
+{f:'2026-01-19',h:18,rep:'Carlos R.',cat:'Gestión de Pagos',est:1,m:150,z:'El Rosario'},
+{f:'2026-01-19',h:19,rep:'Maria L.',cat:'Compras de Súper',est:1,m:350,z:'Jinotepe'},
+{f:'2026-01-19',h:21,rep:'Pedro G.',cat:'Mensajería',est:1,m:100,z:'La Paz'},
+{f:'2026-01-26',h:8,rep:'Sofia M.',cat:'Farmacia y Salud',est:1,m:150,z:'Diriamba'},
+{f:'2026-01-26',h:10,rep:'Juan P.',cat:'Compras de Súper',est:1,m:200,z:'Jinotepe'},
+{f:'2026-01-26',h:12,rep:'Carlos R.',cat:'Gestión de Pagos',est:1,m:100,z:'Santa Teresa'},
+{f:'2026-01-26',h:12,rep:'Maria L.',cat:'Compras de Súper',est:1,m:300,z:'Jinotepe'},
+{f:'2026-01-26',h:15,rep:'Pedro G.',cat:'Mensajería',est:1,m:50,z:'San Marcos'},
+{f:'2026-01-26',h:18,rep:'Sofia M.',cat:'Farmacia y Salud',est:1,m:100,z:'Diriamba'},
+{f:'2026-01-26',h:18,rep:'Juan P.',cat:'Compras de Súper',est:1,m:250,z:'Jinotepe'},
+{f:'2026-01-26',h:19,rep:'Carlos R.',cat:'Gestión de Pagos',est:1,m:150,z:'La Conquista'},
+{f:'2026-01-26',h:21,rep:'Maria L.',cat:'Compras de Súper',est:1,m:200,z:'Jinotepe'},
+{f:'2026-02-02',h:8,rep:'Pedro G.',cat:'Farmacia y Salud',est:1,m:100,z:'San Marcos'},
+{f:'2026-02-02',h:10,rep:'Juan P.',cat:'Compras de Súper',est:1,m:300,z:'Jinotepe'},
+{f:'2026-02-02',h:10,rep:'Sofia M.',cat:'Gestión de Pagos',est:1,m:150,z:'Diriamba'},
+{f:'2026-02-02',h:12,rep:'Maria L.',cat:'Compras de Súper',est:1,m:200,z:'Jinotepe'},
+{f:'2026-02-02',h:12,rep:'Carlos R.',cat:'Mensajería',est:1,m:50,z:'La Paz'},
+{f:'2026-02-02',h:12,rep:'Pedro G.',cat:'Farmacia y Salud',est:1,m:100,z:'Santa Teresa'},
+{f:'2026-02-02',h:15,rep:'Sofia M.',cat:'Compras de Súper',est:1,m:250,z:'Jinotepe'},
+{f:'2026-02-02',h:18,rep:'Juan P.',cat:'Gestión de Pagos',est:1,m:100,z:'Diriamba'},
+{f:'2026-02-02',h:18,rep:'Maria L.',cat:'Compras de Súper',est:1,m:350,z:'Jinotepe'},
+{f:'2026-02-02',h:19,rep:'Carlos R.',cat:'Farmacia y Salud',est:1,m:150,z:'El Rosario'},
+{f:'2026-02-02',h:21,rep:'Pedro G.',cat:'Compras de Súper',est:1,m:200,z:'Jinotepe'},
+{f:'2026-02-14',h:8,rep:'Juan P.',cat:'Mensajería',est:1,m:200,z:'Jinotepe'},
+{f:'2026-02-14',h:10,rep:'Maria L.',cat:'Mensajería',est:1,m:150,z:'Diriamba'},
+{f:'2026-02-14',h:10,rep:'Carlos R.',cat:'Mensajería',est:1,m:250,z:'Jinotepe'},
+{f:'2026-02-14',h:12,rep:'Pedro G.',cat:'Mensajería',est:1,m:200,z:'San Marcos'},
+{f:'2026-02-14',h:12,rep:'Sofia M.',cat:'Mensajería',est:1,m:300,z:'Jinotepe'},
+{f:'2026-02-14',h:12,rep:'Juan P.',cat:'Farmacia y Salud',est:1,m:100,z:'Santa Teresa'},
+{f:'2026-02-14',h:15,rep:'Maria L.',cat:'Mensajería',est:1,m:150,z:'Jinotepe'},
+{f:'2026-02-14',h:18,rep:'Carlos R.',cat:'Mensajería',est:1,m:200,z:'Diriamba'},
+{f:'2026-02-14',h:18,rep:'Pedro G.',cat:'Mensajería',est:1,m:350,z:'Jinotepe'},
+{f:'2026-02-14',h:18,rep:'Sofia M.',cat:'Mensajería',est:1,m:250,z:'La Paz'},
+{f:'2026-02-14',h:21,rep:'Juan P.',cat:'Compras de Súper',est:1,m:100,z:'Jinotepe'},
+{f:'2026-02-18',h:8,rep:'Maria L.',cat:'Farmacia y Salud',est:1,m:100,z:'San Marcos'},
+{f:'2026-02-18',h:10,rep:'Carlos R.',cat:'Compras de Súper',est:1,m:200,z:'Jinotepe'},
+{f:'2026-02-18',h:12,rep:'Pedro G.',cat:'Gestión de Pagos',est:1,m:150,z:'Diriamba'},
+{f:'2026-02-18',h:12,rep:'Sofia M.',cat:'Compras de Súper',est:1,m:300,z:'Jinotepe'},
+{f:'2026-02-18',h:15,rep:'Juan P.',cat:'Farmacia y Salud',est:2,m:50,z:'Santa Teresa'},
+{f:'2026-02-18',h:18,rep:'Carlos R.',cat:'Compras de Súper',est:1,m:250,z:'Jinotepe'},
+{f:'2026-02-18',h:18,rep:'Maria L.',cat:'Mensajería',est:1,m:100,z:'El Rosario'},
+{f:'2026-02-18',h:19,rep:'Pedro G.',cat:'Compras de Súper',est:1,m:400,z:'Jinotepe'},
+{f:'2026-02-18',h:21,rep:'Sofia M.',cat:'Gestión de Pagos',est:1,m:150,z:'Diriamba'},
+{f:'2026-03-02',h:8,rep:'Juan P.',cat:'Farmacia y Salud',est:1,m:100,z:'San Marcos'},
+{f:'2026-03-02',h:10,rep:'Carlos R.',cat:'Compras de Súper',est:1,m:200,z:'Jinotepe'},
+{f:'2026-03-02',h:10,rep:'Sofia M.',cat:'Gestión de Pagos',est:1,m:150,z:'La Paz'},
+{f:'2026-03-02',h:12,rep:'Maria L.',cat:'Compras de Súper',est:1,m:300,z:'Jinotepe'},
+{f:'2026-03-02',h:12,rep:'Pedro G.',cat:'Farmacia y Salud',est:1,m:100,z:'Diriamba'},
+{f:'2026-03-02',h:12,rep:'Juan P.',cat:'Mensajería',est:1,m:50,z:'Santa Teresa'},
+{f:'2026-03-02',h:15,rep:'Carlos R.',cat:'Compras de Súper',est:1,m:250,z:'Jinotepe'},
+{f:'2026-03-02',h:18,rep:'Sofia M.',cat:'Farmacia y Salud',est:1,m:100,z:'San Marcos'},
+{f:'2026-03-02',h:18,rep:'Maria L.',cat:'Compras de Súper',est:1,m:350,z:'Jinotepe'},
+{f:'2026-03-02',h:18,rep:'Pedro G.',cat:'Gestión de Pagos',est:1,m:150,z:'La Conquista'},
+{f:'2026-03-02',h:21,rep:'Juan P.',cat:'Mensajería',est:1,m:100,z:'Diriamba'},
+{f:'2026-03-09',h:8,rep:'Carlos R.',cat:'Compras de Súper',est:1,m:200,z:'Jinotepe'},
+{f:'2026-03-09',h:10,rep:'Sofia M.',cat:'Farmacia y Salud',est:1,m:150,z:'San Marcos'},
+{f:'2026-03-09',h:10,rep:'Maria L.',cat:'Gestión de Pagos',est:1,m:100,z:'Diriamba'},
+{f:'2026-03-09',h:12,rep:'Pedro G.',cat:'Compras de Súper',est:1,m:300,z:'Jinotepe'},
+{f:'2026-03-09',h:12,rep:'Juan P.',cat:'Mensajería',est:1,m:50,z:'La Paz'},
+{f:'2026-03-09',h:12,rep:'Carlos R.',cat:'Farmacia y Salud',est:1,m:100,z:'Santa Teresa'},
+{f:'2026-03-09',h:15,rep:'Sofia M.',cat:'Compras de Súper',est:2,m:200,z:'Jinotepe'},
+{f:'2026-03-09',h:18,rep:'Maria L.',cat:'Gestión de Pagos',est:1,m:150,z:'El Rosario'},
+{f:'2026-03-09',h:18,rep:'Pedro G.',cat:'Compras de Súper',est:1,m:400,z:'Jinotepe'},
+{f:'2026-03-09',h:19,rep:'Juan P.',cat:'Farmacia y Salud',est:1,m:100,z:'Diriamba'},
+{f:'2026-03-09',h:21,rep:'Carlos R.',cat:'Compras de Súper',est:1,m:250,z:'Jinotepe'},
+{f:'2026-03-16',h:8,rep:'Maria L.',cat:'Compras de Súper',est:1,m:300,z:'Jinotepe'},
+{f:'2026-03-16',h:10,rep:'Pedro G.',cat:'Farmacia y Salud',est:1,m:150,z:'San Marcos'},
+{f:'2026-03-16',h:10,rep:'Juan P.',cat:'Compras de Súper',est:1,m:250,z:'Diriamba'},
+{f:'2026-03-16',h:12,rep:'Carlos R.',cat:'Mensajería',est:1,m:100,z:'Jinotepe'},
+{f:'2026-03-16',h:12,rep:'Sofia M.',cat:'Compras de Súper',est:1,m:400,z:'Santa Teresa'},
+{f:'2026-03-16',h:12,rep:'Maria L.',cat:'Gestión de Pagos',est:1,m:150,z:'Jinotepe'},
+{f:'2026-03-16',h:15,rep:'Pedro G.',cat:'Compras de Súper',est:1,m:350,z:'La Paz'},
+{f:'2026-03-16',h:18,rep:'Juan P.',cat:'Farmacia y Salud',est:1,m:100,z:'Jinotepe'},
+{f:'2026-03-16',h:18,rep:'Carlos R.',cat:'Compras de Súper',est:1,m:300,z:'Diriamba'},
+{f:'2026-03-16',h:18,rep:'Sofia M.',cat:'Mensajería',est:1,m:200,z:'Jinotepe'},
+{f:'2026-03-16',h:19,rep:'Maria L.',cat:'Compras de Súper',est:1,m:450,z:'San Marcos'},
+{f:'2026-03-16',h:21,rep:'Pedro G.',cat:'Gestión de Pagos',est:1,m:150,z:'Jinotepe'},
+{f:'2026-03-25',h:8,rep:'Juan P.',cat:'Farmacia y Salud',est:1,m:100,z:'Diriamba'},
+{f:'2026-03-25',h:10,rep:'Carlos R.',cat:'Compras de Súper',est:1,m:200,z:'Jinotepe'},
+{f:'2026-03-25',h:12,rep:'Sofia M.',cat:'Gestión de Pagos',est:1,m:150,z:'La Conquista'},
+{f:'2026-03-25',h:12,rep:'Maria L.',cat:'Compras de Súper',est:1,m:300,z:'Jinotepe'},
+{f:'2026-03-25',h:15,rep:'Pedro G.',cat:'Mensajería',est:1,m:50,z:'Santa Teresa'},
+{f:'2026-03-25',h:18,rep:'Juan P.',cat:'Farmacia y Salud',est:1,m:100,z:'Jinotepe'},
+{f:'2026-03-25',h:18,rep:'Carlos R.',cat:'Compras de Súper',est:1,m:250,z:'El Rosario'},
+{f:'2026-03-25',h:21,rep:'Sofia M.',cat:'Gestión de Pagos',est:1,m:150,z:'Diriamba'},
+{f:'2026-04-06',h:8,rep:'Pedro G.',cat:'Compras de Súper',est:1,m:200,z:'Jinotepe'},
+{f:'2026-04-06',h:10,rep:'Maria L.',cat:'Farmacia y Salud',est:1,m:100,z:'San Marcos'},
+{f:'2026-04-06',h:10,rep:'Sofia M.',cat:'Gestión de Pagos',est:1,m:150,z:'Diriamba'},
+{f:'2026-04-06',h:12,rep:'Juan P.',cat:'Compras de Súper',est:1,m:350,z:'Jinotepe'},
+{f:'2026-04-06',h:12,rep:'Carlos R.',cat:'Mensajería',est:1,m:50,z:'La Paz'},
+{f:'2026-04-06',h:12,rep:'Pedro G.',cat:'Farmacia y Salud',est:1,m:100,z:'Santa Teresa'},
+{f:'2026-04-06',h:15,rep:'Sofia M.',cat:'Compras de Súper',est:1,m:300,z:'Jinotepe'},
+{f:'2026-04-06',h:18,rep:'Maria L.',cat:'Gestión de Pagos',est:1,m:150,z:'Diriamba'},
+{f:'2026-04-06',h:18,rep:'Juan P.',cat:'Compras de Súper',est:1,m:400,z:'Jinotepe'},
+{f:'2026-04-06',h:18,rep:'Carlos R.',cat:'Mensajería',est:1,m:100,z:'El Rosario'},
+{f:'2026-04-06',h:21,rep:'Pedro G.',cat:'Farmacia y Salud',est:2,m:50,z:'San Marcos'},
+{f:'2026-04-13',h:8,rep:'Sofia M.',cat:'Compras de Súper',est:1,m:250,z:'Jinotepe'},
+{f:'2026-04-13',h:10,rep:'Maria L.',cat:'Gestión de Pagos',est:1,m:100,z:'Diriamba'},
+{f:'2026-04-13',h:10,rep:'Juan P.',cat:'Farmacia y Salud',est:1,m:150,z:'Santa Teresa'},
+{f:'2026-04-13',h:12,rep:'Carlos R.',cat:'Compras de Súper',est:1,m:300,z:'Jinotepe'},
+{f:'2026-04-13',h:12,rep:'Pedro G.',cat:'Mensajería',est:1,m:50,z:'La Paz'},
+{f:'2026-04-13',h:12,rep:'Sofia M.',cat:'Compras de Súper',est:1,m:200,z:'Jinotepe'},
+{f:'2026-04-13',h:15,rep:'Maria L.',cat:'Gestión de Pagos',est:1,m:150,z:'Diriamba'},
+{f:'2026-04-13',h:18,rep:'Juan P.',cat:'Compras de Súper',est:1,m:350,z:'Jinotepe'},
+{f:'2026-04-13',h:18,rep:'Carlos R.',cat:'Farmacia y Salud',est:1,m:100,z:'San Marcos'},
+{f:'2026-04-13',h:18,rep:'Pedro G.',cat:'Compras de Súper',est:1,m:450,z:'Jinotepe'},
+{f:'2026-04-13',h:21,rep:'Sofia M.',cat:'Mensajería',est:1,m:150,z:'La Conquista'},
+{f:'2026-04-20',h:8,rep:'Pedro G.',cat:'Compras de Súper',est:1,m:300,z:'Jinotepe'},
+{f:'2026-04-20',h:10,rep:'Juan P.',cat:'Farmacia y Salud',est:1,m:100,z:'Diriamba'},
+{f:'2026-04-20',h:10,rep:'Carlos R.',cat:'Compras de Súper',est:1,m:250,z:'Jinotepe'},
+{f:'2026-04-20',h:12,rep:'Sofia M.',cat:'Gestión de Pagos',est:1,m:150,z:'Santa Teresa'},
+{f:'2026-04-20',h:12,rep:'Maria L.',cat:'Compras de Súper',est:1,m:400,z:'Jinotepe'},
+{f:'2026-04-20',h:12,rep:'Pedro G.',cat:'Mensajería',est:1,m:50,z:'San Marcos'},
+{f:'2026-04-20',h:15,rep:'Juan P.',cat:'Farmacia y Salud',est:1,m:100,z:'Diriamba'},
+{f:'2026-04-20',h:18,rep:'Carlos R.',cat:'Compras de Súper',est:1,m:350,z:'Jinotepe'},
+{f:'2026-04-20',h:18,rep:'Sofia M.',cat:'Gestión de Pagos',est:1,m:150,z:'La Paz'},
+{f:'2026-04-20',h:18,rep:'Maria L.',cat:'Compras de Súper',est:1,m:500,z:'Jinotepe'},
+{f:'2026-04-20',h:21,rep:'Pedro G.',cat:'Mensajería',est:1,m:200,z:'El Rosario'},
+{f:'2026-04-27',h:8,rep:'Juan P.',cat:'Farmacia y Salud',est:1,m:100,z:'Diriamba'},
+{f:'2026-04-27',h:10,rep:'Carlos R.',cat:'Compras de Súper',est:1,m:300,z:'Jinotepe'},
+{f:'2026-04-27',h:12,rep:'Sofia M.',cat:'Gestión de Pagos',est:1,m:150,z:'San Marcos'},
+{f:'2026-04-27',h:12,rep:'Maria L.',cat:'Compras de Súper',est:1,m:200,z:'Jinotepe'},
+{f:'2026-04-27',h:15,rep:'Pedro G.',cat:'Mensajería',est:1,m:50,z:'Santa Teresa'},
+{f:'2026-04-27',h:18,rep:'Juan P.',cat:'Farmacia y Salud',est:1,m:100,z:'Diriamba'},
+{f:'2026-04-27',h:18,rep:'Carlos R.',cat:'Compras de Súper',est:1,m:350,z:'Jinotepe'},
+{f:'2026-04-27',h:18,rep:'Sofia M.',cat:'Gestión de Pagos',est:2,m:150,z:'La Conquista'},
+{f:'2026-04-27',h:21,rep:'Maria L.',cat:'Compras de Súper',est:1,m:250,z:'Jinotepe'},
+{f:'2026-05-04',h:8,rep:'Pedro G.',cat:'Farmacia y Salud',est:1,m:100,z:'Diriamba'},
+{f:'2026-05-04',h:10,rep:'Juan P.',cat:'Compras de Súper',est:1,m:200,z:'Jinotepe'},
+{f:'2026-05-04',h:10,rep:'Carlos R.',cat:'Gestión de Pagos',est:1,m:150,z:'San Marcos'},
+{f:'2026-05-04',h:12,rep:'Sofia M.',cat:'Compras de Súper',est:1,m:300,z:'Jinotepe'},
+{f:'2026-05-04',h:12,rep:'Maria L.',cat:'Mensajería',est:1,m:50,z:'Santa Teresa'},
+{f:'2026-05-04',h:12,rep:'Pedro G.',cat:'Farmacia y Salud',est:1,m:100,z:'Diriamba'},
+{f:'2026-05-04',h:15,rep:'Juan P.',cat:'Compras de Súper',est:1,m:400,z:'Jinotepe'},
+{f:'2026-05-04',h:18,rep:'Carlos R.',cat:'Gestión de Pagos',est:1,m:150,z:'La Paz'},
+{f:'2026-05-04',h:18,rep:'Sofia M.',cat:'Compras de Súper',est:1,m:250,z:'Jinotepe'},
+{f:'2026-05-04',h:19,rep:'Maria L.',cat:'Farmacia y Salud',est:1,m:100,z:'El Rosario'},
+{f:'2026-05-04',h:21,rep:'Pedro G.',cat:'Compras de Súper',est:1,m:300,z:'Jinotepe'},
+{f:'2026-05-10',h:8,rep:'Juan P.',cat:'Mensajería',est:1,m:300,z:'Jinotepe'},
+{f:'2026-05-10',h:8,rep:'Maria L.',cat:'Mensajería',est:1,m:250,z:'Diriamba'},
+{f:'2026-05-10',h:10,rep:'Carlos R.',cat:'Mensajería',est:1,m:350,z:'Jinotepe'},
+{f:'2026-05-10',h:10,rep:'Pedro G.',cat:'Mensajería',est:1,m:200,z:'San Marcos'},
+{f:'2026-05-10',h:10,rep:'Sofia M.',cat:'Mensajería',est:1,m:300,z:'Jinotepe'},
+{f:'2026-05-10',h:12,rep:'Juan P.',cat:'Mensajería',est:1,m:250,z:'Santa Teresa'},
+{f:'2026-05-10',h:12,rep:'Maria L.',cat:'Mensajería',est:1,m:400,z:'Jinotepe'},
+{f:'2026-05-10',h:12,rep:'Carlos R.',cat:'Farmacia y Salud',est:1,m:150,z:'Diriamba'},
+{f:'2026-05-10',h:15,rep:'Pedro G.',cat:'Mensajería',est:1,m:350,z:'Jinotepe'},
+{f:'2026-05-10',h:18,rep:'Sofia M.',cat:'Compras de Súper',est:1,m:200,z:'La Paz'},
+{f:'2026-05-10',h:18,rep:'Juan P.',cat:'Mensajería',est:1,m:450,z:'Jinotepe'},
+{f:'2026-05-10',h:18,rep:'Maria L.',cat:'Farmacia y Salud',est:1,m:100,z:'San Marcos'},
+{f:'2026-05-10',h:21,rep:'Carlos R.',cat:'Mensajería',est:1,m:300,z:'Jinotepe'},
+{f:'2026-05-18',h:8,rep:'Pedro G.',cat:'Compras de Súper',est:1,m:200,z:'Diriamba'},
+{f:'2026-05-18',h:10,rep:'Juan P.',cat:'Gestión de Pagos',est:1,m:150,z:'Jinotepe'},
+{f:'2026-05-18',h:10,rep:'Carlos R.',cat:'Farmacia y Salud',est:1,m:100,z:'Santa Teresa'},
+{f:'2026-05-18',h:12,rep:'Sofia M.',cat:'Compras de Súper',est:1,m:300,z:'Jinotepe'},
+{f:'2026-05-18',h:12,rep:'Maria L.',cat:'Mensajería',est:1,m:50,z:'El Rosario'},
+{f:'2026-05-18',h:12,rep:'Pedro G.',cat:'Compras de Súper',est:1,m:250,z:'Jinotepe'},
+{f:'2026-05-18',h:15,rep:'Juan P.',cat:'Gestión de Pagos',est:2,m:100,z:'La Conquista'},
+{f:'2026-05-18',h:18,rep:'Carlos R.',cat:'Farmacia y Salud',est:1,m:150,z:'Diriamba'},
+{f:'2026-05-18',h:18,rep:'Sofia M.',cat:'Compras de Súper',est:1,m:400,z:'Jinotepe'},
+{f:'2026-05-18',h:18,rep:'Maria L.',cat:'Gestión de Pagos',est:1,m:100,z:'San Marcos'},
+{f:'2026-05-18',h:21,rep:'Pedro G.',cat:'Compras de Súper',est:1,m:350,z:'Jinotepe'},
+{f:'2026-05-25',h:8,rep:'Juan P.',cat:'Compras de Súper',est:1,m:300,z:'Jinotepe'},
+{f:'2026-05-25',h:10,rep:'Carlos R.',cat:'Farmacia y Salud',est:1,m:150,z:'Diriamba'},
+{f:'2026-05-25',h:10,rep:'Sofia M.',cat:'Compras de Súper',est:1,m:250,z:'Jinotepe'},
+{f:'2026-05-25',h:12,rep:'Maria L.',cat:'Gestión de Pagos',est:1,m:100,z:'San Marcos'},
+{f:'2026-05-25',h:12,rep:'Pedro G.',cat:'Compras de Súper',est:1,m:400,z:'Jinotepe'},
+{f:'2026-05-25',h:12,rep:'Juan P.',cat:'Mensajería',est:1,m:50,z:'La Paz'},
+{f:'2026-05-25',h:15,rep:'Carlos R.',cat:'Farmacia y Salud',est:1,m:150,z:'Santa Teresa'},
+{f:'2026-05-25',h:18,rep:'Sofia M.',cat:'Compras de Súper',est:1,m:500,z:'Jinotepe'},
+{f:'2026-05-25',h:18,rep:'Maria L.',cat:'Gestión de Pagos',est:1,m:100,z:'Diriamba'},
+{f:'2026-05-25',h:18,rep:'Pedro G.',cat:'Compras de Súper',est:1,m:350,z:'Jinotepe'},
+{f:'2026-05-25',h:21,rep:'Juan P.',cat:'Farmacia y Salud',est:1,m:200,z:'El Rosario'},
+{f:'2026-06-01',h:8,rep:'Juan P.',cat:'Compras de Súper',est:1,m:150,z:'Jinotepe'},
+{f:'2026-06-01',h:8,rep:'Maria L.',cat:'Farmacia y Salud',est:1,m:100,z:'Diriamba'},
+{f:'2026-06-01',h:8,rep:'Carlos R.',cat:'Gestión de Pagos',est:1,m:150,z:'San Marcos'},
+{f:'2026-06-01',h:8,rep:'Pedro G.',cat:'Mensajería',est:1,m:50,z:'Jinotepe'},
+{f:'2026-06-01',h:10,rep:'Juan P.',cat:'Gestión de Pagos',est:1,m:50,z:'Diriamba'},
+{f:'2026-06-01',h:10,rep:'Maria L.',cat:'Mensajería',est:1,m:100,z:'Jinotepe'},
+{f:'2026-06-01',h:10,rep:'Carlos R.',cat:'Compras de Súper',est:1,m:200,z:'Santa Teresa'},
+{f:'2026-06-01',h:10,rep:'Pedro G.',cat:'Farmacia y Salud',est:1,m:150,z:'Jinotepe'},
+{f:'2026-06-01',h:10,rep:'Sofia M.',cat:'Gestión de Pagos',est:1,m:100,z:'La Paz'},
+{f:'2026-06-01',h:10,rep:'Juan P.',cat:'Compras de Súper',est:2,m:150,z:'Jinotepe'},
+{f:'2026-06-01',h:12,rep:'Maria L.',cat:'Farmacia y Salud',est:1,m:100,z:'Diriamba'},
+{f:'2026-06-01',h:12,rep:'Carlos R.',cat:'Compras de Súper',est:1,m:250,z:'Jinotepe'},
+{f:'2026-06-01',h:12,rep:'Pedro G.',cat:'Mensajería',est:1,m:50,z:'San Marcos'},
+{f:'2026-06-01',h:12,rep:'Sofia M.',cat:'Farmacia y Salud',est:1,m:100,z:'Santa Teresa'},
+{f:'2026-06-01',h:12,rep:'Juan P.',cat:'Gestión de Pagos',est:1,m:150,z:'Jinotepe'},
+{f:'2026-06-01',h:12,rep:'Maria L.',cat:'Compras de Súper',est:1,m:300,z:'Diriamba'},
+{f:'2026-06-01',h:15,rep:'Carlos R.',cat:'Mensajería',est:1,m:150,z:'Jinotepe'},
+{f:'2026-06-01',h:15,rep:'Pedro G.',cat:'Farmacia y Salud',est:1,m:50,z:'La Paz'},
+{f:'2026-06-01',h:15,rep:'Sofia M.',cat:'Gestión de Pagos',est:1,m:100,z:'Jinotepe'},
+{f:'2026-06-01',h:15,rep:'Juan P.',cat:'Compras de Súper',est:1,m:150,z:'San Marcos'},
+{f:'2026-06-01',h:18,rep:'Maria L.',cat:'Compras de Súper',est:1,m:200,z:'Jinotepe'},
+{f:'2026-06-01',h:18,rep:'Carlos R.',cat:'Compras de Súper',est:1,m:250,z:'Diriamba'},
+{f:'2026-06-01',h:18,rep:'Pedro G.',cat:'Farmacia y Salud',est:1,m:100,z:'Jinotepe'},
+{f:'2026-06-01',h:18,rep:'Sofia M.',cat:'Mensajería',est:1,m:150,z:'Santa Teresa'},
+{f:'2026-06-01',h:18,rep:'Juan P.',cat:'Gestión de Pagos',est:1,m:50,z:'San Marcos'},
+{f:'2026-06-01',h:18,rep:'Maria L.',cat:'Compras de Súper',est:1,m:350,z:'Jinotepe'},
+{f:'2026-06-01',h:21,rep:'Carlos R.',cat:'Farmacia y Salud',est:1,m:100,z:'Diriamba'},
+{f:'2026-06-01',h:21,rep:'Pedro G.',cat:'Mensajería',est:1,m:150,z:'Jinotepe'},
+{f:'2026-06-01',h:21,rep:'Sofia M.',cat:'Farmacia y Salud',est:1,m:100,z:'La Paz'},
+{f:'2026-06-01',h:21,rep:'Juan P.',cat:'Compras de Súper',est:1,m:200,z:'Jinotepe'},
+];
+
+const GREEN='#3fb950', GREENS=['#56d364','#3fb950','#26a641','#1a7f37','#0f5323'];
+const CATS=['Compras de Súper','Farmacia y Salud','Gestión de Pagos','Mensajería'];
+const REPS=['Juan P.','Maria L.','Carlos R.','Pedro G.','Sofia M.'];
+const ZONAS=['Jinotepe','Diriamba','San Marcos','Santa Teresa','Dolores','La Paz','El Rosario','La Conquista'];
+let charts={};
+
+function getMonth(f){return parseInt(f.split('-')[1]);}
+
+function filter(data){
+  const mes=document.getElementById('fMes').value;
+  const rep=document.getElementById('fRep').value;
+  const cat=document.getElementById('fCat').value;
+  const zona=document.getElementById('fZona').value;
+  return data.filter(d=>{
+    if(mes!=='all'&&getMonth(d.f)!==parseInt(mes))return false;
+    if(rep!=='all'&&d.rep!==rep)return false;
+    if(cat!=='all'&&d.cat!==cat)return false;
+    if(zona!=='all'&&d.z!==zona)return false;
+    return true;
+  });
+}
+
+function applyFilters(){
+  const d=filter(RAW);
+  updateKPIs(d);
+  updateLinea(d);
+  updateDonut(d);
+  updateRep(d);
+  updateZona(d);
+}
+
+function updateKPIs(d){
+  const comp=d.filter(x=>x.est===1);
+  const total=comp.reduce((a,x)=>a+x.m,0);
+  const efic=d.length?Math.round(comp.length/d.length*100):0;
+  const ticket=comp.length?Math.round(total/comp.length):0;
+  document.getElementById('kVentas').textContent='C$ '+total.toLocaleString();
+  document.getElementById('kVentasSub').textContent='Pedidos completados: '+comp.length;
+  document.getElementById('kPedidos').textContent=comp.length;
+  document.getElementById('kPedidosSub').textContent='Cancelados: '+(d.length-comp.length);
+  document.getElementById('kEfic').textContent=efic+'%';
+  document.getElementById('kEficSub').textContent=efic>=95?'En el objetivo':'Por debajo del objetivo';
+  document.getElementById('kTicket').textContent='C$ '+ticket;
+  document.getElementById('kTicketSub').textContent='Meta: C$ 175';
+}
+
+function updateLinea(d){
+  const slots=[8,10,12,15,18,21];
+  const labels=['8 AM','10 AM','12 PM','3 PM','6 PM','9 PM'];
+  const counts=slots.map(h=>d.filter(x=>x.h===h).length);
+  if(charts.linea)charts.linea.destroy();
+  charts.linea=new Chart(document.getElementById('chartLinea'),{
+    type:'line',
+    data:{labels,datasets:[{label:'Pedidos',data:counts,borderColor:GREEN,backgroundColor:'rgba(63,185,80,0.15)',borderWidth:2,tension:.4,fill:true,pointBackgroundColor:GREEN,pointRadius:5}]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{ticks:{color:'#8b949e'},grid:{color:'rgba(255,255,255,.05)'}},y:{ticks:{color:'#8b949e'},grid:{color:'rgba(255,255,255,.08)'}}}}
+  });
+}
+
+function updateDonut(d){
+  const comp=d.filter(x=>x.est===1);
+  const vals=CATS.map(c=>comp.filter(x=>x.cat===c).reduce((a,x)=>a+x.m,0));
+  const colDonut=['#3fb950','#56d364','#26a641','#1a7f37'];
+  const legEl=document.getElementById('legCat');
+  legEl.innerHTML=CATS.map((c,i)=>`<span><span class="leg-dot" style="background:${colDonut[i]}"></span>${c}</span>`).join('');
+  if(charts.donut)charts.donut.destroy();
+  charts.donut=new Chart(document.getElementById('chartDonut'),{
+    type:'doughnut',
+    data:{labels:CATS,datasets:[{data:vals,backgroundColor:colDonut,borderColor:'#161b22',borderWidth:3}]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},cutout:'60%'}
+  });
+}
+
+function updateRep(d){
+  const comp=d.filter(x=>x.est===1);
+  const vals=REPS.map(r=>comp.filter(x=>x.rep===r).length);
+  if(charts.rep)charts.rep.destroy();
+  charts.rep=new Chart(document.getElementById('chartRep'),{
+    type:'bar',
+    data:{labels:REPS,datasets:[{label:'Entregas Totales',data:vals,backgroundColor:GREEN,borderRadius:5}]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>' Entregas Totales: '+ctx.parsed.y}}},scales:{x:{ticks:{color:'#8b949e'},grid:{display:false}},y:{ticks:{color:'#8b949e'},grid:{color:'rgba(255,255,255,.06)'}}}}
+  });
+}
+
+function updateZona(d){
+  const comp=d.filter(x=>x.est===1);
+  const vals=ZONAS.map(z=>comp.filter(x=>x.z===z).reduce((a,x)=>a+x.m,0));
+  const pairs=ZONAS.map((z,i)=>({z,v:vals[i]})).sort((a,b)=>b.v-a.v);
+  const wrapH=Math.max(pairs.filter(p=>p.v>0).length*38+60,220);
+  document.getElementById('chartZona').parentElement.style.height=wrapH+'px';
+  if(charts.zona)charts.zona.destroy();
+  charts.zona=new Chart(document.getElementById('chartZona'),{
+    type:'bar',
+    data:{labels:pairs.map(p=>p.z),datasets:[{label:'Ventas C$',data:pairs.map(p=>p.v),backgroundColor:GREEN,borderRadius:4,indexAxis:'y'}]},
+    options:{responsive:true,maintainAspectRatio:false,indexAxis:'y',plugins:{legend:{display:false}},scales:{x:{ticks:{color:'#8b949e',callback:v=>'C$ '+v.toLocaleString()},grid:{color:'rgba(255,255,255,.06)'}},y:{ticks:{color:'#8b949e'},grid:{display:false}}}}
+  });
+}
+
+applyFilters();
+</script>
